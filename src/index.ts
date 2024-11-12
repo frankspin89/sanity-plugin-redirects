@@ -1,26 +1,35 @@
-import {definePlugin} from 'sanity'
+import { definePlugin } from 'sanity'
+import { redirectType } from './schema/redirectType'
+import { RedirectsTool } from './tools/RedirectsTool'
+import type { RedirectsPluginConfig } from './types'
+import { createRedirectActions } from './actions/redirects'
 
-interface MyPluginConfig {
-  /* nothing here yet */
-}
+export const redirectsPlugin = definePlugin<RedirectsPluginConfig>((config) => {
+  if (!config.studioConfig) {
+    throw new Error('redirectsPlugin: studioConfig is required')
+  }
 
-/**
- * Usage in `sanity.config.ts` (or .js)
- *
- * ```ts
- * import {defineConfig} from 'sanity'
- * import {myPlugin} from 'sanity-plugin-redirects'
- *
- * export default defineConfig({
- *   // ...
- *   plugins: [myPlugin()],
- * })
- * ```
- */
-export const myPlugin = definePlugin<MyPluginConfig | void>((config = {}) => {
-  // eslint-disable-next-line no-console
-  console.log('hello from sanity-plugin-redirects')
+  // Create actions with provided config
+  const actions = createRedirectActions(config.studioConfig)
+
   return {
-    name: 'sanity-plugin-redirects',
+    name: 'redirects',
+    schema: {
+      types: [redirectType],
+    },
+    tools: [
+      {
+        name: 'redirects',
+        title: 'Redirects',
+        component: RedirectsTool,
+      },
+    ],
+    // Pass config and actions to context
+    config: {
+      ...config,
+      actions,
+    },
   }
 })
+
+export type { RedirectsPluginConfig }
